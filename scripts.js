@@ -1,64 +1,66 @@
-document.addEventListener("DOMContentLoaded", (event) => {
-  // Function to capitalize the first letter of a string
-  const capitalizeFirstLetter = (string) => {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  };
+document.addEventListener('DOMContentLoaded', (event) => {
 
-  // Map of input names to text patterns
-  const inputMap = {
-    "supporter.firstName": /\{user_data~First Name(?:~(\S+))?\}/,
-    "supporter.lastName": /\{user_data~Last Name(?:~(\S+))?\}/,
-    "supporter.emailAddress": /\{user_data~Email(?:~(\S+))?\}/,
-    "supporter.address1": /\{user_data~Address(?:~(\S+))?\}/,
-    "supporter.address2": /\{user_data~Apt ste bldg(?:~(\S+))?\}/,
-    "supporter.city": /\{user_data~City(?:~(\S+))?\}/,
-    "supporter.postcode": /\{user_data~Zip or Postal Code(?:~(\S+))?\}/,
-    "supporter.region": /\{user_data~State or Province(?:~(\S+))?\}/,
-    "supporter.country": /\{user_data~Country(?:~(\S+))?\}/,
-  };
-
-  // Function to wrap merge tag and update its content
-  const wrapAndUpdateMergeTag = (inputName, newValue) => {
-    const regex = inputMap[inputName];
-    // Select all tags that could contain the merge tag
-    const possibleTags = ["h1", "h2", "h3", "p", "strong", "i", "span", "div"];
-    possibleTags.forEach((tag) => {
-      document.querySelectorAll(tag).forEach((element) => {
-        const matches = [...element.innerHTML.matchAll(regex)];
-        matches.forEach((match) => {
-          // This is the merge tag text that needs to be replaced
-          const mergeTagText = match[0];
-          // Create the new engrid-merge-tag element with the data-name attribute
-          const engridMergeTag = `<engrid-merge-tag data-name="${inputName}">${newValue}</engrid-merge-tag>`;
-          // Replace the merge tag text with the new engrid-merge-tag element
-          element.innerHTML = element.innerHTML.replace(
-            mergeTagText,
-            engridMergeTag
-          );
-        });
-      });
-    });
-  };
-
-  // Function to update merge tags based on the input element's name attribute
-  const updateMergeTags = (inputName) => {
-    const inputElement = document.querySelector(`[name="${inputName}"]`);
-    if (!inputElement) return;
-    // Capitalize first letter and update merge tags
-    const newValue = capitalizeFirstLetter(inputElement.value) || "";
-    wrapAndUpdateMergeTag(inputName, newValue);
-  };
-
-  // Attach event listeners to inputs to handle value changes
-  Object.keys(inputMap).forEach((inputName) => {
-    const inputElement = document.querySelector(`[name="${inputName}"]`);
-    if (inputElement) {
-      inputElement.addEventListener("input", () => updateMergeTags(inputName));
+    // Function to capitalize the first letter of a string
+    const capitalizeFirstLetter = (string) => {
+        return string.charAt(0).toUpperCase() + string.slice(1);
     }
-  });
 
-  // Initial call to wrap and update all merge tags on page load
-  Object.keys(inputMap).forEach((inputName) => {
-    wrapAndUpdateMergeTag(inputName, "");
-  });
+    // Map of input names to text patterns
+    const inputMap = {
+        'supporter.firstName': /\{user_data~First Name(?:~(\S+))?\}/,
+        'supporter.lastName': /\{user_data~Last Name(?:~(\S+))?\}/,
+        'supporter.emailAddress': /\{user_data~Email(?:~(\S+))?\}/,
+        'supporter.address1': /\{user_data~Address(?:~(\S+))?\}/,
+        'supporter.address2': /\{user_data~Apt ste bldg(?:~(\S+))?\}/,
+        'supporter.city': /\{user_data~City(?:~(\S+))?\}/,
+        'supporter.postcode': /\{user_data~Zip or Postal Code(?:~(\S+))?\}/,
+        'supporter.region': /\{user_data~State or Province(?:~(\S+))?\}/,
+        'supporter.country': /\{user_data~Country(?:~(\S+))?\}/,
+    };
+
+    // Function to process elements and replace text
+    const processElements = (elements, tags) => {
+        for (let element of elements) {
+            for (let tag of tags) {
+                const tagElements = element.querySelectorAll(tag);
+                for (let tagElement of tagElements) {
+                    for (let inputName in inputMap) {
+                        const regex = inputMap[inputName];
+                        const match = regex.exec(tagElement.innerHTML);
+                        if (match) {
+                            const inputElement = document.querySelector(`[name="${inputName}"]`);
+                            let replacementString;
+                            if (inputElement && inputElement.value) {
+                                replacementString = capitalizeFirstLetter(inputElement.value);
+                            } else if (match[1]) {
+                                // Use the extracted fallback value if the input field is missing or the value is empty
+                                replacementString = match[1];
+                            } else {
+                                // No replacement could be determined, set replacementString to empty to remove the matched string
+                                replacementString = '';
+                            }
+                            tagElement.innerHTML = tagElement.innerHTML.replace(regex, replacementString);
+                            console.log(`Replaced text in a ${tag} element with: ${replacementString}`);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Find elements with the specified classes and process their siblings
+    const classSelectors = ['.showif-fast-personal-details', '.showif-fast-address-details'];
+    for (let classSelector of classSelectors) {
+        const classElements = document.querySelectorAll(classSelector);
+        for (let classElement of classElements) {
+            // Get the parent element to access siblings
+            const parentElement = classElement.parentElement;
+            if (parentElement) {
+                const tags = ['h1', 'h2', 'h3', 'p', 'strong', 'i', 'span', 'div'];
+                // Process the sibling elements of each class element
+                processElements(parentElement.children, tags);
+            }
+        }
+    }
+
 });
