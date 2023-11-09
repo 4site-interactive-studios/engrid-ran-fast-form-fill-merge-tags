@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', (event) => {
+window.addEventListener("RememberMe_Loaded", (e) => {
 
     // Function to capitalize the first letter of a string
     const capitalizeFirstLetter = (string) => {
@@ -31,15 +31,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
                             const inputElement = document.querySelector(`[name="${inputName}"]`);
                             let replacementString;
                             if (inputElement && inputElement.value) {
-                                replacementString = capitalizeFirstLetter(inputElement.value);
+                                replacementString = `<engrid-merge-tag source="${inputName}">${capitalizeFirstLetter(inputElement.value)}</engrid-merge-tag>`;
                             } else if (match[1]) {
-                                // Use the extracted fallback value if the input field is missing or the value is empty
-                                replacementString = match[1];
+                                replacementString = `<engrid-merge-tag source="${inputName}">${match[1]}</engrid-merge-tag>`;
                             } else {
-                                // No replacement could be determined, set replacementString to empty to remove the matched string
                                 replacementString = '';
                             }
-                            tagElement.innerHTML = tagElement.innerHTML.replace(regex, replacementString);
+                            tagElement.innerHTML = tagElement.innerHTML.replace(match[0], replacementString);
                             console.log(`Replaced text in a ${tag} element with: ${replacementString}`);
                         }
                     }
